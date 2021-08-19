@@ -23,11 +23,6 @@
       "react-app/jest"
     ]
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "line-statged"
-    }
-  },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
   },
