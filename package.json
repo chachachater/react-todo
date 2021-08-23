@@ -12,7 +12,7 @@
     "react-scripts": "4.0.3",
     "web-vitals": "^1.1.2"
   },
-  "homepage": "https://chachachater.github.io/react-form",
+  "homepage": "https://chachachater.github.io/react-todo",
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",

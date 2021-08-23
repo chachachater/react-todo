@@ -1,109 +1,142 @@
-import React, { useState, useRef, useEffect } from "react";
-import "./App.css";
+import styled from "styled-components";
+import { MEDIA_QUERY_MD, MEDIA_QUERY_SM } from "./constansts/style.js";
 
-function Square(props) {
+const TodoItemWrapper = styled.div`
+  width: 70%;
+  margin: auto;
+  display: flex;
+  border: 1px solid ${(props) => props.theme.colors.border};
+  padding: 10px 10px;
+  align-items: center;
+  justify-content: space-between;
+  & + & {
+    margin-top: 20px;
+  }
+`;
+const TodoContent = styled.div`
+  color: ${(props) => props.theme.colors.font};
+  ${MEDIA_QUERY_MD} {
+    font-size: 16px;
+  }
+  ${MEDIA_QUERY_SM} {
+    font-size: 12px;
+  }
+  // 透過三源運算子來修改
+  ${(props) =>
+    props.$isDone &&
+    `
+    text-decoration: line-through;
+  `}
+`;
+const TodoButtonWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+`;
+const Button = styled.button`
+  padding: 5px;
+  margin-top: 5px;
+  & + & {
+    margin-left: 10px;
+  }
+  border-radius: 5px;
+  background-color: ${(props) => props.theme.colors.first_button};
+  ${MEDIA_QUERY_MD} {
+    font-size: 16px;
+  }
+  ${MEDIA_QUERY_SM} {
+    font-size: 12px;
+  }
+`;
+const DeletedButton = styled(Button)`
+  background-color: ${(props) => props.theme.colors.second_button};
+  color: ${(props) => props.theme.colors.button_font};
+`;
+
+function TodoItem(props) {
   return (
-    <button className="square" onClick={props.onClick}>
-      {props.value}
-    </button>
+    <TodoItemWrapper className={props.className}>
+      <TodoContent
+        $size={props.size}
+        data-todo-id={props.todo.id}
+        $isDone={props.todo.isDone}
+      >
+        {props.content}
+      </TodoContent>
+      <TodoButtonWrapper>
+        <Button
+          onClick={() => {
+            props.handleIsDoneButton(props.todo.id);
+          }}
+        >
+          {props.todo.isDone ? "已完成" : "未完成"}
+        </Button>
+        <DeletedButton
+          onClick={() => {
+            props.handleDeleteTodo(props.todo.id);
+          }}
+        >
+          刪除
+        </DeletedButton>
+      </TodoButtonWrapper>
+    </TodoItemWrapper>
   );
 }
 
-function Board(props) {
-  const squares = [];
-  for (let i = 0; i < props.size; i++) {
-    const row = [];
-    for (let j = 0; j < props.size; j++) {
-      row.push(null);
-    }
-    squares.push(row);
+const TodoTitleWrapper = styled.div`
+  width: 70%;
+  margin: 20px auto;
+  display: flex;
+  border: 1px solid ${(props) => props.theme.colors.border};
+  padding: 10px 10px;
+  flex-direction: column;
+`;
+const Title = styled.div`
+  ${MEDIA_QUERY_MD} {
+    font-size: 36px;
   }
-  const [state, setState] = useState({
-    squares,
-    xIsNext: true,
-  });
-  const [winner, setWinner] = useState(null);
+  ${MEDIA_QUERY_SM} {
+    font-size: 24px;
+  }
+  text-align: center;
+`;
+const TodoInput = styled.input`
+  ${MEDIA_QUERY_MD} {
+    font-size: 16px;
+  }
+  ${MEDIA_QUERY_SM} {
+    font-size: 12px;
+  }
+  margin: 10px;
+`;
 
-  function handleClick(y, x) {
-    const squares = state.squares;
-    if (squares[y][x]) return;
-    if (winner) return;
-    squares[y][x] = state.xIsNext ? "●" : "○";
-    setState({
-      squares,
-      xIsNext: !state.xIsNext,
-    });
-    if (checkWinner(squares, y, x)) {
-      setWinner(squares[y][x]);
-      return;
-    }
-  }
-
-  function renderSquare(y, x) {
-    return (
-      <Square value={state.squares[y][x]} onClick={() => handleClick(y, x)} />
-    );
-  }
-  let status;
-  if (winner) {
-    status = "Winner: " + winner;
-  } else {
-    status = "Next player: " + (state.xIsNext ? "●" : "○");
-  }
+function TodoTitle(props) {
   return (
-    <div>
-      <div className="status">{status}</div>
-      {squares.map((each, rowIndex) => {
-        return (
-          <div className="board-row">
-            {squares.map((each, colIndex) => {
-              return renderSquare(rowIndex, colIndex);
-            })}
-          </div>
-        );
-      })}
-    </div>
+    <TodoTitleWrapper className={props.className}>
+      <Title>{props.title}</Title>
+      <TodoInput
+        className="input-block"
+        type="text"
+        placeholder="to do what? press enter to add todo."
+        onKeyDown={(e) => {
+          props.handleAddTodo(e);
+        }}
+        onChange={(e) => {
+          props.handleInputChange(e);
+        }}
+      />
+      <TodoButtonWrapper
+        onClick={(e) => {
+          props.handleButtonClick(e);
+        }}
+      >
+        <Button className="all-btn">All Todo</Button>
+        <Button className="completed-btn">Completed Todo</Button>
+        <Button className="umcompleted-btn">Uncompleted Todo</Button>
+        <Button className="clean-btn">Clean up Todo</Button>
+      </TodoButtonWrapper>
+    </TodoTitleWrapper>
   );
 }
 
-function checkWinner(squares, currentY, currentX) {
-  return (
-    getContinousChess(squares, currentY, currentX, 1, 0) +
-      getContinousChess(squares, currentY, currentX, -1, 0) >=
-      4 ||
-    getContinousChess(squares, currentY, currentX, 0, 1) +
-      getContinousChess(squares, currentY, currentX, 0, -1) >=
-      4 ||
-    getContinousChess(squares, currentY, currentX, 1, 1) +
-      getContinousChess(squares, currentY, currentX, -1, -1) >=
-      4 ||
-    getContinousChess(squares, currentY, currentX, -1, 1) +
-      getContinousChess(squares, currentY, currentX, 1, -1) >=
-      4
-  );
-}
-
-function getContinousChess(squares, currentY, currentX, nextX, nextY) {
-  const currentColor = squares[currentY][currentX];
-  let tmpX = currentX + nextX;
-  let tmpY = currentY + nextY;
-  let total = 0;
-
-  if (tmpX < 0) return 0;
-  if (tmpY < 0) return 0;
-  if (tmpX > squares.length - 1) return 0;
-  if (tmpY > squares.length - 1) return 0;
-
-  while (squares[tmpY][tmpX] === currentColor) {
-    total++;
-    tmpX += nextX;
-    tmpY += nextY;
-    if (tmpX < 0) return total;
-    if (tmpY < 0) return total;
-    if (tmpX > squares.length - 1) return total;
-    if (tmpY > squares.length - 1) return total;
-  }
-  return total;
-}
-
-export { Board };
+export { TodoItem, TodoTitle };
